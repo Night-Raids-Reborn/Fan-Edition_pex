@@ -52,6 +52,7 @@ import com.android.internal.util.custom.NavbarUtils;
 
 import java.util.List;
 import java.util.UUID;
+import java.net.InetAddress;
 
 import com.android.settings.Utils;
 import com.android.settings.gestures.PowerMenuPreferenceController;
@@ -82,6 +83,7 @@ public class Hardware extends SettingsPreferenceFragment implements
     private static final String CATEGORY_ASSIST = "assist_key";
     private static final String CATEGORY_APPSWITCH = "app_switch_key";
     private static final String CATEGORY_CAMERA = "camera_key";
+    private static final String PREF_ADBLOCK = "persist.aicp.hosts_block";
 
     private ListPreference mBackLongPressAction;
     private ListPreference mHomeLongPressAction;
@@ -623,7 +625,17 @@ public class Hardware extends SettingsPreferenceFragment implements
             handleListChange(mVolumeKeyCursorControl, newValue,
                     Settings.System.VOLUME_KEY_CURSOR_CONTROL);
             return true;
-        }
+        }  else if (PREF_ADBLOCK.equals(preference.getKey())) {
+            // Flush the java VM DNS cache to re-read the hosts file.
+            // Delay to ensure the value is persisted before we refresh
+            mHandler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        InetAddress.clearDnsCache();
+                    }
+            }, 1000);
+            return true;
+            }
         return false;
     }
 
